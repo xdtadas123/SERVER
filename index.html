@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuietLink - Connect with Fellow Introverts</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>QuietLink</h1>
+        <p>Connect with fellow introverts through text chat, at your own pace.</p>
+    </header>
+    <div class="container">
+        <p>Join a safe space designed for introverts to connect randomly and meaningfully.</p>
+        <a href="#" class="btn" id="start-chat">Start Text Chat</a>
+        <div id="loading" style="display: none;">
+            <p>Searching for another introvert...</p>
+            <div class="spinner"></div>
+        </div>
+        <div id="chat-window" style="display: none;">
+            <div id="messages"></div>
+            <input type="text" id="message-input" placeholder="Type your message...">
+            <button id="send-message">Send</button>
+            <button id="end-chat">End Chat</button>
+        </div>
+    </div>
+    <footer>
+        <p>© 2025 QuietLink. All rights reserved.</p>
+    </footer>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #121212;
+    color: #e0e0e0;
+    text-align: center;
+}
+header {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    padding: 2rem;
+}
+h1 {
+    margin: 0;
+    font-size: 2.5rem;
+}
+p {
+    font-size: 1.2rem;
+    margin: 1rem 0;
+}
+.container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+.btn {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    background-color: #333333;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    margin: 1rem;
+}
+.btn:hover {
+    background-color: #444444;
+}
+footer {
+    background-color: #0a0a0a;
+    color: #bbbbbb;
+    padding: 1rem;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+#chat-window {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 2rem;
+}
+#messages {
+    height: 300px;
+    overflow-y: auto;
+    background-color: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    text-align: left;
+}
+.local-message {
+    text-align: right;
+    color: #4caf50;
+    margin: 0.5rem 0;
+}
+.remote-message {
+    text-align: left;
+    color: #2196f3;
+    margin: 0.5rem 0;
+}
+#message-input {
+    width: 70%;
+    padding: 0.5rem;
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+#send-message, #end-chat {
+    padding: 0.5rem 1rem;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#send-message:hover, #end-chat:hover {
+    background-color: #444;
+}
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 1rem auto;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
