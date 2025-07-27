@@ -4,11 +4,10 @@
   "description": "Introvert chat app",
   "main": "server.js",
   "scripts": {
-    "start": "node api/index.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "socket.io": "^4.7.5",
-    "@socket.io/redis-adapter": "^8.3.0",
-    "@upstash/redis": "^1.34.0"
+    "express": "^4.18.2",
+    "socket.io": "^4.7.5"
   }
 }
