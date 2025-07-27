@@ -1,81 +1,111 @@
-const express = require('express');
-const app = express();
-const server = require('http').createServer(app);
-const io = require('socket.io')(server, {
-    cors: { origin: '*' }
-});
-const path = require('path');
+const { Server } = require("socket.io");
+const { createAdapter } = require("@socket.io/redis-adapter");
+const { Redis } = require("@upstash/redis");
 
-// Serve static files from /public (adjust to __dirname if not restructured)
-app.use(express.static(path.join(__dirname, '..', 'public')));
+module.exports = async (req, res) => {
+  const httpServer = res.socket.server;
 
-// Catch-all for SPA: serve index.html for non-API paths
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
-});
+  if (!httpServer.io) {
+    console.log("Initializing Socket.io");
 
-let waitingUsers = []; // For random matching
-let updateTimeout = null;
+    const io = new Server(httpServer, {
+      path: "/socket.io/",
+      cors: { origin: "*" }
+    });
 
-function updateUserCounts() {
-    if (updateTimeout) clearTimeout(updateTimeout);
-    updateTimeout = setTimeout(() => {
-        const total = io.engine.clientsCount;
-        let chatting = 0;
-        io.sockets.sockets.forEach((soc) => {
-            if (soc.rooms.size > 1) chatting++;
-        });
-        const idle = total - chatting;
-        io.emit('user-counts', { idle, chatting });
-    }, 100); // 100ms debounce for refresh handling
-}
+    // Set up Redis adapter for Socket.io (shares rooms and broadcasts across instances)
+    const pubClient = new Redis({
+      url: process.env.UPSTASH_REDIS_URL,
+      token: process.env.UPSTASH_REDIS_TOKEN,
+    });
+    const subClient = pubClient.duplicate();
+    io.adapter(createAdapter(pubClient, subClient));
 
-io.on('connection', (socket) => {
-    console.log('User connected');
-    updateUserCounts();
+    const WAITING_KEY = "waiting_users";
+    const CHATTING_KEY = "chatting_users";
 
-    socket.on('join-random', () => {
-        if (waitingUsers.length > 0) {
-            const partner = waitingUsers.pop();
-            const room = `room-${socket.id}-${partner.id}`;
-            socket.join(room);
-            partner.join(room);
-            socket.emit('matched', { room });
-            partner.emit('matched', { room });
+    io.on("connection", (socket) => {
+      console.log("User connected");
+
+      socket.on("join-random", async () => {
+        // Try to pop a partner from the waiting queue (shared via Redis)
+        const partnerId = await pubClient.rpop(WAITING_KEY);
+        if (partnerId) {
+          // Match found
+          const room = `room-${socket.id}-${partnerId}`;
+
+          // Join both to room (works across instances via adapter)
+          io.to(socket.id).socketsJoin(room);
+          io.to(partnerId).socketsJoin(room);
+
+          // Mark as chatting (shared count)
+          await pubClient.sadd(CHATTING_KEY, socket.id, partnerId);
+
+          // Emit matched to both (works across instances)
+          io.to(socket.id).emit("matched", { room, initiator: true });
+          io.to(partnerId).emit("matched", { room, initiator: false });
         } else {
-            waitingUsers.push(socket);
+          // No match, add to waiting queue
+          await pubClient.lpush(WAITING_KEY, socket.id);
         }
-        updateUserCounts();
-    });
+        updateUserCounts(io, pubClient, CHATTING_KEY);
+      });
 
-    socket.on('chat-message', (data) => {
-        socket.to(data.room).emit('chat-message', data.msg);
-    });
+      // Signaling handlers (forward to room)
+      socket.on("offer", (data) => {
+        socket.to(data.room).emit("offer", data.offer);
+      });
 
-    socket.on('leave-room', (data) => {
-        socket.to(data.room).emit('user-left');
-        socket.leave(data.room);
-        updateUserCounts();
-    });
+      socket.on("answer", (data) => {
+        socket.to(data.room).emit("answer", data.answer);
+      });
 
-    socket.on('disconnect', () => {
-        waitingUsers = waitingUsers.filter(s => s.id !== socket.id);
-        // If in room, notify partner
-        for (const room of socket.rooms) {
+      socket.on("ice-candidate", (data) => {
+        socket.to(data.room).emit("ice-candidate", data);
+      });
+
+      socket.on("leave-room", async (data) => {
+        io.to(data.room).emit("user-left");
+        io.to(socket.id).socketsLeave(data.room);
+        await pubClient.srem(CHATTING_KEY, socket.id);
+        updateUserCounts(io, pubClient, CHATTING_KEY);
+      });
+
+      socket.on("disconnect", async () => {
+        await pubClient.lrem(WAITING_KEY, 0, socket.id);
+        const removed = await pubClient.srem(CHATTING_KEY, socket.id);
+        if (removed > 0) {
+          for (const room of socket.rooms) {
             if (room !== socket.id) {
-                socket.to(room).emit('user-left');
+              io.to(room).emit("user-left");
             }
+          }
         }
-        updateUserCounts();
+        updateUserCounts(io, pubClient, CHATTING_KEY);
+      });
     });
 
-    socket.on('error', (err) => {
-        console.error('Socket error:', err);
-    });
-});
+    httpServer.io = io;
+  }
 
-const port = process.env.PORT || 3000;
-server.listen(port, () => console.log(`Server on port ${port}`));
+  // Handle Socket.io requests (polling or WebSocket upgrade)
+  if (req.url.startsWith("/socket.io/")) {
+    httpServer.io.engine.handleRequest(req, res);
+  } else {
+    // No other routes needed (static handled by Vercel)
+    res.status(404).send("Not Found");
+  }
+};
 
-// Export for serverless compatibility (e.g., Vercel, though WebSockets won't work)
-module.exports = { app, server };
+let updateTimeout = null;
+async function updateUserCounts(io, pubClient, CHATTING_KEY) {
+  if (updateTimeout) clearTimeout(updateTimeout);
+  updateTimeout = setTimeout(async () => {
+    const [chatting, total] = await Promise.all([
+      pubClient.scard(CHATTING_KEY),
+      io.of("/").adapter.allSockets().then((set) => set.size),
+    ]);
+    const idle = total - chatting;
+    io.emit("user-counts", { idle, chatting });
+  }, 100);
+}
