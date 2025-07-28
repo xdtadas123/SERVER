@@ -1,13 +1,13 @@
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Georgia', serif;
     margin: 0;
     padding: 0;
-    color: #e0e0e0;
+    color: #333333;
     text-align: center;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    position: relative; /* Ensure content is positioned above the video */
+    position: relative;
 }
 
 #background-video {
@@ -16,27 +16,41 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Makes the video cover the entire background */
-    z-index: -1; /* Places the video behind all other content */
+    object-fit: cover;
+    z-index: -2;
+}
+
+#dark-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: -1;
 }
 
 header {
-    background-color: rgba(30, 30, 30, 0.8);
-    color: #ffffff;
+    background-color: rgba(240, 240, 220, 0.8);
+    color: #8B0000;
     padding: 3rem 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2), 0 0 10px rgba(139, 0, 0, 0.3);
 }
 
 h1 {
     margin: 0;
     font-size: 3rem;
-    font-weight: 300;
+    font-weight: 400;
+    font-family: 'Pirata One', cursive;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 h2 {
     font-size: 1.5rem;
     font-weight: 400;
     margin-bottom: 1rem;
+    font-family: 'Pirata One', cursive;
+    color: #8B0000;
 }
 
 p {
@@ -54,33 +68,35 @@ p {
 .btn {
     display: inline-block;
     padding: 1rem 2rem;
-    background-color: #4a90e2;
+    background-color: #8B0000;
     color: #ffffff;
     text-decoration: none;
     border-radius: 8px;
     font-size: 1.1rem;
     margin: 1.5rem 0;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 0 5px rgba(139, 0, 0, 0.5);
 }
 
 .btn:hover {
-    background-color: #357abd;
+    background-color: #660000;
+    transform: scale(1.05);
 }
 
 footer {
-    background-color: rgba(10, 10, 10, 0.8);
-    color: #bbbbbb;
+    background-color: rgba(240, 240, 220, 0.8);
+    color: #333333;
     padding: 1.5rem;
     width: 100%;
-    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.2);
 }
 
 #interests-section {
-    background-color: rgba(30, 30, 30, 0.8);
+    background-color: rgba(240, 240, 220, 0.8);
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2), 0 0 10px rgba(139, 0, 0, 0.3);
 }
 
 #interests {
@@ -91,7 +107,7 @@ footer {
 }
 
 #interests label {
-    background-color: #444444;
+    background-color: rgba(200, 200, 180, 0.8);
     padding: 0.5rem 1rem;
     border-radius: 24px;
     cursor: pointer;
@@ -99,43 +115,45 @@ footer {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    color: #333333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 #interests label:hover {
-    background-color: #555555;
-    transform: translateY(-2px);
+    background-color: rgba(180, 180, 160, 0.8);
+    transform: scale(1.05);
 }
 
 #interests input:checked + span {
-    color: #ffffff;
+    color: #8B0000;
     font-weight: bold;
 }
 
 #interests input {
-    accent-color: #4a90e2;
+    accent-color: #8B0000;
 }
 
 #chat-window {
-    background-color: rgba(30, 30, 30, 0.8);
-    border: 1px solid #444;
+    background-color: rgba(240, 240, 220, 0.8);
+    border: 1px solid #8B0000;
     border-radius: 12px;
     padding: 1.5rem;
     margin-top: 2rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 10px rgba(139, 0, 0, 0.3);
 }
 
 #messages {
     height: 400px;
     overflow: hidden;
-    background-color: #2a2a2a;
+    background-color: #f0f0e0;
     background-image: 
-        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-        linear-gradient(rgba(255,255,255,0.03) 2px, transparent 2px),
-        linear-gradient(90deg, rgba(255,255,255,0.03) 2px, transparent 2px);
+        linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px),
+        linear-gradient(rgba(0,0,0,0.03) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(0,0,0,0.03) 2px, transparent 2px);
     background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
     background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
-    border: 1px solid #444;
+    border: 1px solid #8B0000;
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
@@ -155,8 +173,8 @@ footer {
     font-family: 'Cascadia Code', monospace;
     font-weight: 600;
     font-size: 1.2rem;
-    color: #ffffff;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    color: #333333;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
     padding: 1rem 1.5rem;
     border-radius: 20px;
     max-width: 70%;
@@ -167,18 +185,18 @@ footer {
 
 .local-message {
     align-self: flex-end;
-    background-color: #cccccc;
+    background-color: #d0d0c0;
 }
 
 .remote-message {
     align-self: flex-start;
-    background-color: #888888;
+    background-color: #b0b0a0;
 }
 
 .system-message {
     align-self: center;
-    background-color: #444444;
-    color: #bbbbbb;
+    background-color: #a0a090;
+    color: #666666;
     font-style: italic;
 }
 
@@ -191,29 +209,30 @@ footer {
 #message-input {
     flex: 1;
     padding: 1rem;
-    background-color: #333;
-    color: #e0e0e0;
-    border: 1px solid #444;
+    background-color: #f0f0e0;
+    color: #333333;
+    border: 1px solid #8B0000;
     border-radius: 8px;
 }
 
 #send-message, #end-chat {
     padding: 1rem 1.5rem;
-    background-color: #4a90e2;
+    background-color: #8B0000;
     color: #fff;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
 #send-message:hover, #end-chat:hover {
-    background-color: #357abd;
+    background-color: #660000;
+    transform: scale(1.05);
 }
 
 .spinner {
     border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
+    border-top: 4px solid #8B0000;
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -243,9 +262,9 @@ footer {
 }
 
 .gray {
-    background-color: gray;
+    background-color: #808080;
 }
 
 .green {
-    background-color: #4caf50;
+    background-color: #006400;
 }
