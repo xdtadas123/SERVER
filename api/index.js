@@ -1,3 +1,4 @@
+// api/index.js
 const { Server } = require("socket.io");
 const { createAdapter } = require("@socket.io/redis-adapter");
 const { Redis } = require("@upstash/redis");
@@ -26,6 +27,7 @@ module.exports = async (req, res) => {
 
     io.on("connection", (socket) => {
       console.log("User connected");
+      updateUserCounts(io, pubClient, CHATTING_KEY);
 
       socket.on("join-random", async () => {
         // Try to pop a partner from the waiting queue (shared via Redis)
