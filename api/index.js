@@ -1,3 +1,4 @@
+// api/index.js
 const { Server } = require("socket.io");
 const { createAdapter } = require("@socket.io/redis-adapter");
 const Redis = require("ioredis");
