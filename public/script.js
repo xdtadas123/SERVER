@@ -1,4 +1,9 @@
+// script.js
 const socket = io();
+socket.on('user-counts', ({ idle, chatting }) => {
+    document.getElementById('idle-count').textContent = idle;
+    document.getElementById('chatting-count').textContent = chatting;
+});
 let pc;
 let room;
 let dataChannel;
@@ -140,4 +145,13 @@ function endChat() {
     document.getElementById('chat-window').style.display = 'none';
     document.getElementById('start-chat').style.display = 'inline-block';
     document.getElementById('messages').innerHTML = '';
+}
+
+function displayMessage(message, type) {
+    const messagesInner = document.getElementById('messages-inner');
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add(type === 'local' ? 'local-message' : 'remote-message');
+    msgDiv.textContent = message;
+    messagesInner.appendChild(msgDiv);
+    messagesInner.scrollTop = messagesInner.scrollHeight;
 }
