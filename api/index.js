@@ -1,7 +1,7 @@
 // api/index.js
 const { Server } = require("socket.io");
 const { createAdapter } = require("@socket.io/redis-adapter");
-const { Redis } = require("@upstash/redis");
+const Redis = require("ioredis");
 
 module.exports = async (req, res) => {
   const httpServer = res.socket.server;
@@ -15,10 +15,7 @@ module.exports = async (req, res) => {
     });
 
     // Set up Redis adapter for Socket.io (shares rooms and broadcasts across instances)
-    const pubClient = new Redis({
-      url: process.env.UPSTASH_REDIS_URL,
-      token: process.env.UPSTASH_REDIS_TOKEN,
-    });
+    const pubClient = new Redis(process.env.UPSTASH_REDIS_URL);
     const subClient = pubClient.duplicate();
     io.adapter(createAdapter(pubClient, subClient));
 
