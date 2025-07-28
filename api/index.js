@@ -16,7 +16,9 @@ module.exports = async (req, res) => {
 
     // Set up Redis adapter for Socket.io (shares rooms and broadcasts across instances)
     const pubClient = new Redis(process.env.UPSTASH_REDIS_URL);
+    pubClient.on('error', (err) => console.error('Redis Pub Client Error', err));
     const subClient = pubClient.duplicate();
+    subClient.on('error', (err) => console.error('Redis Sub Client Error', err));
     io.adapter(createAdapter(pubClient, subClient));
 
     const WAITING_KEY = "waiting_users";
