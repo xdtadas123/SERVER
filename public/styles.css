@@ -2,7 +2,7 @@ body {
     font-family: 'Georgia', serif;
     margin: 0;
     padding: 0;
-    color: #333333;
+    color: #222222;
     text-align: center;
     min-height: 100vh;
     display: flex;
@@ -26,15 +26,15 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.5);
     z-index: -1;
 }
 
 header {
-    background-color: rgba(240, 240, 220, 0.8);
-    color: #8B0000;
+    background-color: rgba(219, 193, 157, 0.8);
+    color: #800000;
     padding: 3rem 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2), 0 0 10px rgba(139, 0, 0, 0.3);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2), 0 0 10px rgba(128, 0, 0, 0.3);
 }
 
 h1 {
@@ -43,6 +43,13 @@ h1 {
     font-weight: 400;
     font-family: 'Pirata One', cursive;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    animation: glow 3s infinite;
+}
+
+@keyframes glow {
+    0% { text-shadow: 0 0 5px #800000; }
+    50% { text-shadow: 0 0 15px #800000; }
+    100% { text-shadow: 0 0 5px #800000; }
 }
 
 h2 {
@@ -50,7 +57,7 @@ h2 {
     font-weight: 400;
     margin-bottom: 1rem;
     font-family: 'Pirata One', cursive;
-    color: #8B0000;
+    color: #800000;
 }
 
 p {
@@ -68,35 +75,36 @@ p {
 .btn {
     display: inline-block;
     padding: 1rem 2rem;
-    background-color: #8B0000;
+    background-color: #800000;
     color: #ffffff;
     text-decoration: none;
     border-radius: 8px;
     font-size: 1.1rem;
     margin: 1.5rem 0;
     transition: background-color 0.3s ease, transform 0.2s ease;
-    box-shadow: 0 0 5px rgba(139, 0, 0, 0.5);
+    box-shadow: 0 0 5px rgba(128, 0, 0, 0.5);
 }
 
 .btn:hover {
-    background-color: #660000;
+    background-color: #550000;
     transform: scale(1.05);
 }
 
 footer {
-    background-color: rgba(240, 240, 220, 0.8);
-    color: #333333;
+    background-color: rgba(219, 193, 157, 0.8);
+    color: #222222;
     padding: 1.5rem;
     width: 100%;
     box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.2);
 }
 
 #interests-section {
-    background-color: rgba(240, 240, 220, 0.8);
+    background-color: rgba(219, 193, 157, 0.8);
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2), 0 0 10px rgba(139, 0, 0, 0.3);
+    margin-top: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2), 0 0 10px rgba(128, 0, 0, 0.3);
 }
 
 #interests {
@@ -107,7 +115,7 @@ footer {
 }
 
 #interests label {
-    background-color: rgba(200, 200, 180, 0.8);
+    background-color: rgba(180, 160, 130, 0.8);
     padding: 0.5rem 1rem;
     border-radius: 24px;
     cursor: pointer;
@@ -115,37 +123,37 @@ footer {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #333333;
+    color: #222222;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 #interests label:hover {
-    background-color: rgba(180, 180, 160, 0.8);
+    background-color: rgba(160, 140, 110, 0.8);
     transform: scale(1.05);
 }
 
 #interests input:checked + span {
-    color: #8B0000;
+    color: #800000;
     font-weight: bold;
 }
 
 #interests input {
-    accent-color: #8B0000;
+    accent-color: #800000;
 }
 
 #chat-window {
-    background-color: rgba(240, 240, 220, 0.8);
-    border: 1px solid #8B0000;
+    background-color: rgba(219, 193, 157, 0.8);
+    border: 1px solid #800000;
     border-radius: 12px;
     padding: 1.5rem;
     margin-top: 2rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 10px rgba(139, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 10px rgba(128, 0, 0, 0.3);
 }
 
 #messages {
     height: 400px;
     overflow: hidden;
-    background-color: #f0f0e0;
+    background-color: #d0b080;
     background-image: 
         linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px),
@@ -153,7 +161,7 @@ footer {
         linear-gradient(90deg, rgba(0,0,0,0.03) 2px, transparent 2px);
     background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
     background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
-    border: 1px solid #8B0000;
+    border: 1px solid #800000;
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
@@ -173,7 +181,7 @@ footer {
     font-family: 'Cascadia Code', monospace;
     font-weight: 600;
     font-size: 1.2rem;
-    color: #333333;
+    color: #222222;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
     padding: 1rem 1.5rem;
     border-radius: 20px;
@@ -185,18 +193,18 @@ footer {
 
 .local-message {
     align-self: flex-end;
-    background-color: #d0d0c0;
+    background-color: #c0a070;
 }
 
 .remote-message {
     align-self: flex-start;
-    background-color: #b0b0a0;
+    background-color: #a08050;
 }
 
 .system-message {
     align-self: center;
-    background-color: #a0a090;
-    color: #666666;
+    background-color: #907040;
+    color: #555555;
     font-style: italic;
 }
 
@@ -209,15 +217,15 @@ footer {
 #message-input {
     flex: 1;
     padding: 1rem;
-    background-color: #f0f0e0;
-    color: #333333;
-    border: 1px solid #8B0000;
+    background-color: #d0b080;
+    color: #222222;
+    border: 1px solid #800000;
     border-radius: 8px;
 }
 
 #send-message, #end-chat {
     padding: 1rem 1.5rem;
-    background-color: #8B0000;
+    background-color: #800000;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -226,13 +234,13 @@ footer {
 }
 
 #send-message:hover, #end-chat:hover {
-    background-color: #660000;
+    background-color: #550000;
     transform: scale(1.05);
 }
 
 .spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #8B0000;
+    border: 4px solid #e0c0a0;
+    border-top: 4px solid #800000;
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -262,9 +270,9 @@ footer {
 }
 
 .gray {
-    background-color: #808080;
+    background-color: #606060;
 }
 
 .green {
-    background-color: #006400;
+    background-color: #004400;
 }
