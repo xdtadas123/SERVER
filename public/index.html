@@ -1,52 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NightChat</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cascadia+Code:wght@600&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QuietLink</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cascadia+Code:wght@600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-    <video autoplay muted loop id="background-video">
-        <source src="1nonly - GRAILED (feat. Freddie Dredd) [Official Music Video] (online-video-cutter.com).mp4" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
-    <div id="dark-overlay"></div>
-    <header>
-        <h1>QuietLink</h1>
-        <p>Connect and socialize with other people !</p>
-    </header>
-    <main class="container">
-        <p id="disclaimer">There is totally nothing illegal among these conversations.</p>
-        
-        <a href="#" id="start-chat" class="btn">Start Text Chat</a>
-        
-        <div id="loading" style="display: none;">
-            <p>Searching...</p>
-            <div class="spinner"></div>
-        </div>
+<!-- Optional background video: place your file at /public/videos/background.mp4 -->
+<video autoplay muted loop id="background-video" playsinline>
+<source src="/videos/background.mp4" type="video/mp4" />
+</video>
+<div id="dark-overlay"></div>
 
-        <div id="chat-window" style="display: none;">
-            <div id="messages">
-                <div id="messages-inner"></div>
-            </div>
-            <div class="input-row">
-                <input type="text" id="message-input" placeholder="Type your message...">
-                <button id="send-message">Send</button>
-                <button id="end-chat">End Chat</button>
-            </div>
-        </div>
-    </main>
-    <footer>
-        <div id="user-stats">
-            <span class="bubble gray"></span> <span id="idle-count">0</span> Browsing
-            <span class="bubble green"></span> <span id="chatting-count">0</span> Chatting
-        </div>
-        <p>© 2025 QuietLink. All rights reserved.</p>
-    </footer>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="script.js"></script>
+
+<header>
+<h1>QuietLink</h1>
+<p>Connect and socialize with other people!</p>
+</header>
+
+
+<main class="container">
+<p id="disclaimer">There is totally nothing illegal among these conversations.</p>
+
+
+<div id="home-cta" class="card">
+<button id="start-chat" class="btn">Start Text Chat</button>
+<button id="cancel-match" class="btn btn-ghost" style="display:none">Cancel</button>
+<div id="loading" class="loading" style="display:none">
+<div class="spinner" aria-label="Searching"></div>
+<p>Finding someone to chat with…</p>
+</div>
+<div id="status" class="status">Idle</div>
+<div id="user-stats">
+<span class="bubble gray"></span>
+<span id="idle-count">0</span> Browsing
+<span class="bubble green"></span>
+<span id="chatting-count">0</span> Chatting
+</div>
+</div>
+
+
+<div id="chat-window" class="card" style="display:none">
+<div class="chat-header">
+<div>
+<strong>Connected</strong>
+<span id="room-label" class="badge"></span>
+</div>
+<div class="chat-actions">
+<button id="new-chat" class="btn btn-ghost">New Chat</button>
+<button id="end-chat" class="btn">End Chat</button>
+</div>
+</div>
+
+
+<div id="messages" role="log" aria-live="polite" aria-relevant="additions"></div>
+<form id="composer" class="input-row" autocomplete="off">
+<input id="message-input" type="text" placeholder="Type your message…" maxlength="1000" />
+<button id="send-message" class="btn" type="submit">Send</button>
+</form>
+</div>
+</main>
+
+
+<footer>
+<p>© 2025 QuietLink. All rights reserved.</p>
+</footer>
+
+
+<!-- Socket.IO client from the same origin. The route is mapped in vercel.json -->
+<script src="/socket.io/socket.io.js" defer></script>
+<script src="/script.js" type="module" defer></script>
 </body>
 </html>
