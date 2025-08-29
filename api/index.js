@@ -1,12 +1,25 @@
-// Vercel serverless Socket.IO + Redis matcher (minimal, stable)
-// ENV required: UPSTASH_REDIS_URL
+// Socket.IO matcher with Redis (Upstash) when available, in-memory fallback otherwise.
 
 const { Server } = require("socket.io");
 const { createAdapter } = require("@socket.io/redis-adapter");
 const Redis = require("ioredis");
 
+// Accept common env var names. Must be a Redis CONNECTION URL like: rediss://default:PASS@host:port
+const REDIS_URL =
+  process.env.UPSTASH_REDIS_URL ||
+  process.env.UPSTASH_REDIS_CONNECTION_URL ||
+  process.env.REDIS_URL ||
+  "";
+
+// Redis keys (used only when Redis is enabled)
 const WAITING_KEY = "waiting_users";
 const CHATTING_KEY = "chatting_users";
+
+// In-memory fallback (single instance only)
+const mem = {
+  waiting: new Set(),
+  chatting: new Set(),
+};
 
 module.exports = async (req, res) => {
   const httpServer = res.socket.server;
@@ -15,56 +28,123 @@ module.exports = async (req, res) => {
     console.log("Initializing Socket.io");
 
     const io = new Server(httpServer, {
-      // IMPORTANT: default client path is "/socket.io" (no trailing slash)
-      path: "/socket.io",
+      path: "/socket.io", // default client path (no trailing slash)
       cors: { origin: "*" },
       transports: ["websocket", "polling"],
     });
 
-    // ---- Redis adapter (multi-instance safe) ----
-    const pubClient = new Redis(process.env.UPSTASH_REDIS_URL);
-    const subClient = pubClient.duplicate();
+    let useRedis = Boolean(REDIS_URL);
+    let pubClient, subClient;
 
-    const pubNodes = pubClient.nodes ? pubClient.nodes() : [pubClient];
-    const subNodes = subClient.nodes ? subClient.nodes() : [subClient];
-    pubNodes.forEach((n) => n.on("error", (e) => console.error("Redis Pub Error:", e)));
-    subNodes.forEach((n) => n.on("error", (e) => console.error("Redis Sub Error:", e)));
+    if (useRedis) {
+      try {
+        // Upstash gives a rediss:// URL. ioredis understands it as a single argument.
+        pubClient = new Redis(REDIS_URL, { maxRetriesPerRequest: 3 });
+        subClient = pubClient.duplicate();
 
-    io.adapter(createAdapter(pubClient, subClient));
+        // Helpful error logs
+        const nodes = (c) => (c.nodes ? c.nodes() : [c]);
+        nodes(pubClient).forEach((n) =>
+          n.on("error", (e) => console.error("Redis Pub Node Error", e))
+        );
+        nodes(subClient).forEach((n) =>
+          n.on("error", (e) => console.error("Redis Sub Node Error", e))
+        );
 
-    // ---- Helpers ----
+        io.adapter(createAdapter(pubClient, subClient));
+        console.log("Redis adapter enabled");
+      } catch (err) {
+        console.error("Failed to init Redis adapter, falling back to memory:", err);
+        useRedis = false;
+      }
+    } else {
+      console.warn(
+        "No REDIS_URL found. Running in single-instance memory mode. Set UPSTASH_REDIS_URL to enable multi-instance matching."
+      );
+    }
+
+    // ---- helpers shared by both modes ----
     async function updateUserCounts() {
       try {
-        const [chatting, total] = await Promise.all([
-          pubClient.scard(CHATTING_KEY),
-          io.of("/").adapter.allSockets().then((set) => set.size),
-        ]);
-        const idle = Math.max(0, total - chatting);
-        io.emit("user-counts", { idle, chatting });
+        let chattingCount = 0;
+
+        if (useRedis) {
+          chattingCount = await pubClient.scard(CHATTING_KEY);
+        } else {
+          chattingCount = mem.chatting.size;
+        }
+
+        const total = await io.of("/").adapter.allSockets().then((s) => s.size);
+        const idle = Math.max(0, total - chattingCount);
+        io.emit("user-counts", { idle, chatting: chattingCount });
       } catch (e) {
         console.error("updateUserCounts error:", e);
       }
     }
 
-    // Try several pops to avoid pairing with disconnected sockets
-    async function takeValidPartner(excludeId) {
-      for (let i = 0; i < 6; i++) {
-        const candidate = await pubClient.rpop(WAITING_KEY);
-        if (!candidate) return null;
-        if (candidate === excludeId) continue; // shouldn't happen, but skip just in case
-        if (io.sockets.sockets.has(candidate)) return candidate; // still connected
-        // else stale; keep looping
+    async function addToWaiting(id) {
+      if (useRedis) {
+        await pubClient.sadd(WAITING_KEY, id);
+      } else {
+        mem.waiting.add(id);
       }
-      return null;
     }
 
-    // ---- Socket handlers ----
+    async function removeFromWaiting(id) {
+      if (useRedis) {
+        await pubClient.srem(WAITING_KEY, id);
+      } else {
+        mem.waiting.delete(id);
+      }
+    }
+
+    async function popValidPartner(excludeId) {
+      if (useRedis) {
+        // Try a few pops to filter out stale IDs
+        for (let i = 0; i < 6; i++) {
+          const candidate = await pubClient.spop(WAITING_KEY);
+          if (!candidate) return null;
+          if (candidate === excludeId) continue;
+          if (io.sockets.sockets.has(candidate)) return candidate;
+        }
+        return null;
+      } else {
+        // In-memory: pick any connected socket from the set
+        for (const candidate of mem.waiting) {
+          if (candidate !== excludeId && io.sockets.sockets.has(candidate)) {
+            mem.waiting.delete(candidate);
+            return candidate;
+          }
+        }
+        return null;
+      }
+    }
+
+    async function markChattingAdd(...ids) {
+      if (useRedis) {
+        if (ids.length) await pubClient.sadd(CHATTING_KEY, ...ids);
+      } else {
+        ids.forEach((id) => mem.chatting.add(id));
+      }
+    }
+
+    async function markChattingRemove(id) {
+      if (useRedis) {
+        await pubClient.srem(CHATTING_KEY, id);
+      } else {
+        mem.chatting.delete(id);
+      }
+    }
+
+    // ---- socket handlers ----
     io.on("connection", (socket) => {
+      console.log("User connected");
       updateUserCounts();
 
       socket.on("join-random", async () => {
         try {
-          const partnerId = await takeValidPartner(socket.id);
+          // Try to find a partner; if none, add self to waiting
+          const partnerId = await popValidPartner(socket.id);
 
           if (partnerId) {
             const room = `room-${socket.id}-${partnerId}`;
@@ -72,38 +152,32 @@ module.exports = async (req, res) => {
             io.to(socket.id).socketsJoin(room);
             io.to(partnerId).socketsJoin(room);
 
-            await pubClient.sadd(CHATTING_KEY, socket.id, partnerId);
+            await markChattingAdd(socket.id, partnerId);
 
             io.to(socket.id).emit("matched", { room, initiator: true });
             io.to(partnerId).emit("matched", { room, initiator: false });
           } else {
-            // nobody free; add to waiting pool
-            await pubClient.lpush(WAITING_KEY, socket.id);
+            await addToWaiting(socket.id);
           }
+
           updateUserCounts();
         } catch (e) {
           console.error("join-random error:", e);
         }
       });
 
-      // Signaling passthrough
-      socket.on("offer", ({ room, offer }) => {
-        socket.to(room).emit("offer", offer);
-      });
-
-      socket.on("answer", ({ room, answer }) => {
-        socket.to(room).emit("answer", answer);
-      });
-
-      socket.on("ice-candidate", ({ room, candidate }) => {
-        socket.to(room).emit("ice-candidate", { candidate });
-      });
+      // WebRTC signaling passthrough
+      socket.on("offer", ({ room, offer }) => socket.to(room).emit("offer", offer));
+      socket.on("answer", ({ room, answer }) => socket.to(room).emit("answer", answer));
+      socket.on("ice-candidate", ({ room, candidate }) =>
+        socket.to(room).emit("ice-candidate", { candidate })
+      );
 
       socket.on("leave-room", async ({ room }) => {
         try {
           socket.to(room).emit("user-left");
           socket.leave(room);
-          await pubClient.srem(CHATTING_KEY, socket.id);
+          await markChattingRemove(socket.id);
           updateUserCounts();
         } catch (e) {
           console.error("leave-room error:", e);
@@ -112,13 +186,14 @@ module.exports = async (req, res) => {
 
       socket.on("disconnect", async () => {
         try {
-          await pubClient.lrem(WAITING_KEY, 0, socket.id);
-          const removed = await pubClient.srem(CHATTING_KEY, socket.id);
+          await removeFromWaiting(socket.id);
+          const before = useRedis ? null : mem.chatting.has(socket.id);
+          await markChattingRemove(socket.id);
 
-          // Notify any rooms the socket was in
-          if (removed > 0) {
-            for (const room of socket.rooms) {
-              if (room !== socket.id) io.to(room).emit("user-left");
+          // If they were chatting, notify their rooms
+          if (useRedis || before) {
+            for (const r of socket.rooms) {
+              if (r !== socket.id) io.to(r).emit("user-left");
             }
           }
 
@@ -132,7 +207,7 @@ module.exports = async (req, res) => {
     httpServer.io = io;
   }
 
-  // IMPORTANT: match the default client path (no trailing slash)
+  // Route Socket.IO engine requests
   if (req.url.startsWith("/socket.io")) {
     res.socket.server.io.engine.handleRequest(req, res);
   } else {
